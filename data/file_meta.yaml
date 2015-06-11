@@ -1,0 +1,30 @@
+---
+  base_path: "~/myproject/data_merger/data"
+  columns:
+    - 'LOC'
+    - 'AGELVL'
+    - 'EDLVL'
+    - 'GENDER'
+    - 'OCC'
+    - 'DATECODE'
+    - 'SALARY'
+    - 'LOS'
+  base_file: "FACTDATA_SEP2009.TXT"
+  mapping_files:
+    location: 
+      file_name: "DTloc.txt"
+      key: "LOC"
+      value: "LOCT"
+    occupation: 
+      file_name: "DTocc.txt"
+      key: "OCC"
+      value: "OCCT"
+    education:
+      file_name: "DTedlvl.txt"
+      key: "EDLVL"
+      value: "EDLVLTYPT"
+    age:
+      file_name: "DTagelvl.txt"
+      key: "AGELVL"
+      value: "AGELVLT"
+  out_path: "data_out/merged.csv"
