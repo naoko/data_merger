@@ -36,7 +36,6 @@ inspired by design/pattern below:
 TODO:
 
 - add more tests!
-- add JsonMetaExtractor
 - add more error handling
 - receive job via REST (use [EVE](http://python-eve.org/))
     - payload should include metadata and path to output so that i can remove hardcoded source/destination :(
@@ -62,4 +61,4 @@ TODO:
 ###run test with intuitive test runner pytest
 
     $ cd data_merger
-    $ py.test
+    $ py.test --cov .

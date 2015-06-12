@@ -2,20 +2,24 @@
 see test discovery rule
 https://pytest.org/latest/goodpractises.html#test-discovery
 """
+import pytest
+
 from merger import MetaDataExtractorStrategy, FileMerger
 from merger import class_factory
 
 
-def test_yml_extractor_factory():
-    document = """
-      a: ["x", "y", "z"]
-      b:
-        c: 3
-        d: 4
-    """
-    extractor = MetaDataExtractorStrategy.data_extractor_factory('YmlMetaExtractor')
-    parms = extractor(document).params
-    assert parms == {'a': ['x', 'y', 'z'], 'b': {'c': 3, 'd': 4}}
+@pytest.mark.parametrize("extractor, document", [
+    ('YmlMetaExtractor', """
+                              a: ["x", "y", "z"]
+                              b:
+                                c: 3
+                                d: 4"""),
+    ('JsonMetaExtractor', """{"a": ["x", "y", "z"],"b": {"c": 3, "d": 4}}"""),
+])
+def test_json_extractor_factory(extractor, document):
+    extractor = MetaDataExtractorStrategy.data_extractor_factory(extractor)
+    params = extractor(document).params
+    assert params == {'a': ['x', 'y', 'z'], 'b': {'c': 3, 'd': 4}}
 
 def test_meta_data_class_factory():
     attributes = {"a": [1, 2, 3]}

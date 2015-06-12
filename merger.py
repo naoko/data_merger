@@ -1,6 +1,7 @@
 import gzip
 import os
 import logging
+import json
 
 from yaml import load
 import pandas as pd
@@ -11,7 +12,7 @@ import merger_exceptions
 logger = logging.getLogger(__name__)
 
 
-METADATA_TYPE = ('YmlMetaExtractor', )
+METADATA_TYPE = ('YmlMetaExtractor', 'JsonMetaExtractor', )
 
 EXTRACTOR_CLASS_REGISTRY = {}
 """list of extractor classes"""
@@ -53,6 +54,20 @@ class YmlMetaExtractor(MetaDataExtractorStrategy):
     @property
     def params(self):
         return load(self.document)
+
+
+@register_class
+class JsonMetaExtractor(MetaDataExtractorStrategy):
+    """
+
+    """
+    def __init__(self, *args, **kwargs):
+        super(JsonMetaExtractor, self).__init__(*args, **kwargs)
+
+    @property
+    def params(self):
+        print self.document
+        return json.loads(self.document)
 
 
 def class_factory(cls_name, dict_attrs):
