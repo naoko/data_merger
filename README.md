@@ -36,7 +36,7 @@ inspired by design/pattern below:
 TODO:
 
 - add more tests!
-- add more error handling
+- dataframe component should use strategy pattern to accept various file type
 - receive job via REST (use [EVE](http://python-eve.org/))
     - payload should include metadata and path to output so that i can remove hardcoded source/destination :(
 - connect to custom data source such such as S3

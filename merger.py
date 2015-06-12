@@ -19,6 +19,7 @@ EXTRACTOR_CLASS_REGISTRY = {}
 
 REQUIRED_KEYS = ('mapping_files', 'base_path', 'columns', 'base_file', 'out_path', )
 
+
 def register_class(extractor_class):
     """
 
@@ -80,6 +81,30 @@ def class_factory(cls_name, dict_attrs):
     return type(cls_name, (object, ), dict_attrs)
 
 
+class DataFrame(object):
+    """
+    this should be converted to strategy pattern so that it can take
+    various file format such as Excel and csv
+    """
+
+    def __init__(self, file_path, metadata, column=None):
+        self.df = self._data_frame_from_csv(file_path, column)
+        self.metadata = metadata
+
+    @staticmethod
+    def _data_frame_from_csv(file_path, column=None):
+        df = pd.read_csv(file_path)
+        if column:
+            df = df[column]
+        return df
+
+    def data_frame_merge(self, data_df, key, value):
+        merged_df = pd.merge(self.df, data_df, how='outer', left_on=[key], right_on=[key])
+        self.metadata.columns.append(value)
+        self.metadata.columns.pop(self.metadata.columns.index(key))
+        self.df = merged_df[self.metadata.columns]
+
+
 class FileMerger(object):
     """
 
@@ -102,36 +127,30 @@ class FileMerger(object):
                 # write output
                 file_out.writelines(file_in)
 
-    def dataframe_from_csv(self, file_path, column=None):
-        df = pd.read_csv(file_path)
-        if column:
-            df = df[column]
-        return df
-
-    def dataframe_merge(self, main_df, data_df, key, value):
-        main_df = pd.merge(main_df, data_df, how='outer', left_on=[key], right_on=[key])
-        self.metadata.columns.append(value)
-        self.metadata.columns.pop(self.metadata.columns.index(key))
-        return main_df[self.metadata.columns]
-
     def merge(self):
-        main_df = self.dataframe_from_csv(
-            os.path.join(self.metadata.base_path, self.metadata.base_file), column=self.metadata.columns)
+
+        df = DataFrame(
+            os.path.join(self.metadata.base_path, self.metadata.base_file),
+            metadata=self.metadata,
+            column=self.metadata.columns
+        )
 
         for file_type, meta in self.metadata.mapping_files.iteritems():
-            logger.info("processing {}".format(file_type))
+            msg = "processing {}".format(file_type)
+            print msg
+            logger.info(msg)
             try:
                 file_path = os.path.join(self.metadata.base_path, meta["file_name"])
-                data_df = self.dataframe_from_csv(file_path)
+                support_data = DataFrame(file_path, metadata=self.metadata)
             except IOError as exc:
                 logger.exception(msg=exc.message)
                 raise merger_exceptions.MergerFileIOException(file_path, exc)
-            main_df = self.dataframe_merge(main_df, data_df, meta["key"], meta["value"])
+            df.data_frame_merge(support_data.df, meta["key"], meta["value"])
 
-        logger.info("head: {}".format(main_df.head()))
-        logger.info("tail: {}".format(main_df.tail()))
+        logger.info("head: {}".format(df.df.head()))
+        logger.info("tail: {}".format(df.df.tail()))
         logger.info("exporting....")
-        main_df.to_csv(self.metadata.out_path)
+        df.df.to_csv(self.metadata.out_path)
 
         logger.info("compressing....")
         self.compress(self.metadata.out_path)
