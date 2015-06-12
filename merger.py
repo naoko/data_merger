@@ -102,25 +102,32 @@ class FileMerger(object):
                 # write output
                 file_out.writelines(file_in)
 
-    def merge(self):
-        base_path = self.metadata.base_path
+    def dataframe_from_csv(self, file_path, column=None):
+        df = pd.read_csv(file_path)
+        if column:
+            df = df[column]
+        return df
 
-        main_df = pd.read_csv(os.path.join(base_path, self.metadata.base_file))
-        main_df = main_df[self.metadata.columns]
+    def dataframe_merge(self, main_df, data_df, key, value):
+        main_df = pd.merge(main_df, data_df, how='outer', left_on=[key], right_on=[key])
+        self.metadata.columns.append(value)
+        self.metadata.columns.pop(self.metadata.columns.index(key))
+        return main_df[self.metadata.columns]
+
+    def merge(self):
+        main_df = self.dataframe_from_csv(
+            os.path.join(self.metadata.base_path, self.metadata.base_file), column=self.metadata.columns)
 
         for file_type, meta in self.metadata.mapping_files.iteritems():
             logger.info("processing {}".format(file_type))
             try:
-                file_path = os.path.join(base_path, meta["file_name"])
-                data_df = pd.read_csv(file_path)
+                file_path = os.path.join(self.metadata.base_path, meta["file_name"])
+                data_df = self.dataframe_from_csv(file_path)
             except IOError as exc:
                 logger.exception(msg=exc.message)
                 raise merger_exceptions.MergerFileIOException(file_path, exc)
+            main_df = self.dataframe_merge(main_df, data_df, meta["key"], meta["value"])
 
-            main_df = pd.merge(main_df, data_df, how='outer', left_on=[meta["key"]], right_on=[meta["key"]])
-            self.metadata.columns.append(meta["value"])
-            self.metadata.columns.pop(self.metadata.columns.index(meta["key"]))
-            main_df = main_df[self.metadata.columns]
         logger.info("head: {}".format(main_df.head()))
         logger.info("tail: {}".format(main_df.tail()))
         logger.info("exporting....")
