@@ -28,7 +28,7 @@ then it will match "LOC" value and map to value in "LOCT"
 
 inspired by design/pattern below:
 
-- strategy pattern: to provide various file type to read metadata 
+- strategy pattern: to provide various file type to read metadata (yaml, json) and input file (csv, excel)
 - class registry: to reverse lookups which enable clean validation for factory
 - custom exception: allow you to provide extra context
 - [declarative programming](http://en.wikipedia.org/wiki/Declarative_programming): to avoid unnecessary hard-code
@@ -36,7 +36,6 @@ inspired by design/pattern below:
 TODO:
 
 - add more tests!
-- dataframe component should use strategy pattern to accept various file type
 - receive job via REST (use [EVE](http://python-eve.org/))
     - payload should include metadata and path to output so that i can remove hardcoded source/destination :(
 - connect to custom data source such such as S3
